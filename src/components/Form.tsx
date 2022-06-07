@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { addDoc, collection, onSnapshot } from "firebase/firestore";
+import { Fragment, useEffect, useState } from "react";
+import { addDoc, collection, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { v4 } from "uuid";
 import { Reserva } from "../models/Reserva";
@@ -15,14 +15,14 @@ function Form() {
   const reservasColRef = collection(db, "reservas");
 
   //LLAMAR A LA CONFIG PARA SACAR EL SRC Y EL PRECIO
-  const configColRef = collection(db, "config");
+  const configColRef = doc(db, "config", 'IpzGOwuGAgKdv2NonbDf');
   const [config, setConfig] = useState({});
 
   useEffect(() => {
     const unsubscribe = onSnapshot(configColRef, (snapshot) => {
-      const docs = snapshot.docs.map((doc) => doc.data());
-      setConfig(docs);
-      console.log("Esta es la config:", config);
+      console.log("snapshot:", snapshot.data());
+      const data = snapshot.data();
+      setConfig(data);
     });
 
     return () => {
@@ -44,8 +44,8 @@ function Form() {
   return (
     <div>
       <div className="box2">
-        <img src="" className="img" alt="img" />
-        <h4>Precio: $0000</h4>
+        <img src={config.imgUrl} className="img" alt="img" />
+        <h4>Precio: {config.precio}</h4>
       </div>
       <hr />
       <div className="box">

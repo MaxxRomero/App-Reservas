@@ -1,7 +1,6 @@
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes } from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "../firebaseConfig.js";
-import { v4 } from "uuid";
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
 
@@ -9,33 +8,46 @@ export default function Admin() {
   const [reservas, setReservas] = useState([]);
   const [file, setFile] = useState(null);
   const [precio, setPrecio] = useState("");
+  const [urlImg, setUrlImg] = useState("");
   const reservasColRef = collection(db, "reservas");
+
   const configColRef = doc(db, "config", 'IpzGOwuGAgKdv2NonbDf');
+  const [config, setConfig] = useState({});
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(reservasColRef, (snapshot) => {
+    const unsubReservas = onSnapshot(reservasColRef, (snapshot) => {
       const docs = snapshot.docs.map((doc) => doc.data());
       setReservas(docs);
       console.log("GUARDA QUE SE LLAMA");
     });
 
+    const unsubConfig = onSnapshot(configColRef, (snapshot) => {
+      console.log("snapshot:", snapshot.data());
+      const data = snapshot.data();
+      setConfig(data);
+    });
+
     return () => {
-      unsubscribe();
+      unsubReservas();
     };
   }, []);
 
+
   const uploadImage = () => {
     if (file == null) return;
-    const imageRef = ref(storage, file.name + v4());
-    uploadBytes(imageRef, file).then(() => {
-      alert("Image Uploaded");
+    const imageRef = ref(storage, file.name);
+    uploadBytes(imageRef, file).then((snapshot) => {
+      console.log("Imagen cargada");
+      getDownloadURL(snapshot.ref).then(url => {
+        setUrlImg(url);
+      }); 
     });
   };
 
   function update() {
     uploadImage();
     const config = {
-      imgUrl: file.name,
+      imgUrl: urlImg,
       precio: precio,
     };
     updateDoc(configColRef, config);
@@ -45,7 +57,7 @@ export default function Admin() {
   return (
     <div>
       <div className="flex-container">
-        <span>Precio actual: $0000</span>
+        <span>Precio actual: {config.precio}</span>
         <div className="box3">
           <div>
             <label htmlFor="precio">Cambiar precio:</label>
