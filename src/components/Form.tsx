@@ -1,33 +1,21 @@
-import { Fragment, useEffect, useState } from "react";
-import { addDoc, collection, doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { useEffect, useState } from "react";
 import { v4 } from "uuid";
 import { Reserva } from "../models/Reserva";
+import { configColRef, reservasColRef } from "../firebaseConfig";
+import fireService from "../services/fireService.js";
 
 function Form() {
   const [nombre, setNombre] = useState("");
   const [lugar, setLugar] = useState("");
   const [personas, setPersonas] = useState("");
+  const [config, setConfig] = useState({});
+
+  //ESTO DEBERIA IR EN OTRO LADO
   const arrayLugares = ["Bariloche", "Tucuman", "Cordoba"];
   const arrayPersonas = ["2", "4", "6"];
 
-  //Firebase collection
-  const reservasColRef = collection(db, "reservas");
-
-  //LLAMAR A LA CONFIG PARA SACAR EL SRC Y EL PRECIO
-  const configColRef = doc(db, "config", 'IpzGOwuGAgKdv2NonbDf');
-  const [config, setConfig] = useState({});
-
   useEffect(() => {
-    const unsubscribe = onSnapshot(configColRef, (snapshot) => {
-      console.log("snapshot:", snapshot.data());
-      const data = snapshot.data();
-      setConfig(data);
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    fireService.get(configColRef, setConfig, 'config');
   }, []);
 
   function update() {
@@ -37,8 +25,7 @@ function Form() {
       personas: personas,
       uid: v4(),
     };
-    addDoc(reservasColRef, reserva);
-    console.log("state:", reserva);
+    fireService.update(reservasColRef, reserva);
   }
 
   return (

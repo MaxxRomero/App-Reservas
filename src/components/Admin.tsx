@@ -1,57 +1,29 @@
-import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage } from "../firebaseConfig.js";
 import React, { useEffect, useState } from "react";
-import { db } from "../firebaseConfig";
+import { reservasColRef, configColRef } from "../firebaseConfig";
+import fireService from "../services/fireService.js";
+import { Config } from "../models/Config";
 
 export default function Admin() {
   const [reservas, setReservas] = useState([]);
   const [file, setFile] = useState(null);
   const [precio, setPrecio] = useState("");
   const [urlImg, setUrlImg] = useState("");
-  const reservasColRef = collection(db, "reservas");
-
-  const configColRef = doc(db, "config", 'IpzGOwuGAgKdv2NonbDf');
   const [config, setConfig] = useState({});
 
   useEffect(() => {
-    const unsubReservas = onSnapshot(reservasColRef, (snapshot) => {
-      const docs = snapshot.docs.map((doc) => doc.data());
-      setReservas(docs);
-      console.log("GUARDA QUE SE LLAMA");
-    });
-
-    const unsubConfig = onSnapshot(configColRef, (snapshot) => {
-      console.log("snapshot:", snapshot.data());
-      const data = snapshot.data();
-      setConfig(data);
-    });
-
-    return () => {
-      unsubReservas();
-    };
+    fireService.get(reservasColRef, setReservas);
+    fireService.get(configColRef, setConfig, 'config');
   }, []);
 
 
-  const uploadImage = () => {
-    if (file == null) return;
-    const imageRef = ref(storage, file.name);
-    uploadBytes(imageRef, file).then((snapshot) => {
-      console.log("Imagen cargada");
-      getDownloadURL(snapshot.ref).then(url => {
-        setUrlImg(url);
-      }); 
-    });
-  };
-
   function update() {
-    uploadImage();
-    const config = {
+    fireService.uploadImage(file, setUrlImg);
+    const config: Config = {
       imgUrl: urlImg,
       precio: precio,
     };
-    updateDoc(configColRef, config);
-    console.log("config:", config);
+    //ARREGLAR ESTO FIXME:, TIENE QUE HABER UN LOADING O QUIZA NO CARGAR LA IMAGEN CUANDO SE UPDATEA Y HACERLO EN OTRO MOMENTO
+    urlImg === '' ? alert("ESPERANDO QUE CARGUE LA IMAGEN") : fireService.update(configColRef, config);
   }
 
   return (
