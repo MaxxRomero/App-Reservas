@@ -8,7 +8,10 @@ function Form() {
   const [nombre, setNombre] = useState("");
   const [lugar, setLugar] = useState("");
   const [personas, setPersonas] = useState("");
-  const [config, setConfig] = useState({});
+  const [config, setConfig] = useState({
+    precio: "",
+    imgUrl: "",
+  });
 
   //ESTO DEBERIA IR EN OTRO LADO
   const arrayLugares = ["Bariloche", "Tucuman", "Cordoba"];

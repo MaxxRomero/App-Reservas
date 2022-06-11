@@ -4,17 +4,29 @@ import fireService from "../services/fireService.js";
 import { Config } from "../models/Config";
 
 export default function Admin() {
-  const [reservas, setReservas] = useState([]);
+  const [reservas, setReservas] = useState([{
+    lugar: "",
+    personas: "",
+    nombre: "",
+    uid: 0,
+  }]);
   const [file, setFile] = useState(null);
   const [precio, setPrecio] = useState("");
   const [urlImg, setUrlImg] = useState("");
-  const [config, setConfig] = useState({});
+  const [config, setConfig] = useState({
+    precio: "",
+    imgUrl: "",
+  });
 
   useEffect(() => {
     fireService.get(reservasColRef, setReservas);
     fireService.get(configColRef, setConfig, 'config');
   }, []);
 
+
+  function setImg(e) {
+    setFile(e)
+  }
 
   function update() {
     fireService.uploadImage(file, setUrlImg);
@@ -43,7 +55,7 @@ export default function Admin() {
           <label className="custom-file-upload">
             <input
               type="file"
-              onChange={(event) => setFile(event.target.files[0])}
+              onChange={(event) => setImg(event.target.files![0])}
             />
             Cambiar imagen
           </label>
